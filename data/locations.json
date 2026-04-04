@@ -1,0 +1,10 @@
+{
+  "entrance": {
+    "name": "Main Entrance",
+    "direction": "Go straight towards the hallway"
+  },
+  "hallway": {
+    "name": "Hallway",
+    "direction": "Turn left to reach Room 101"
+  }
+}
