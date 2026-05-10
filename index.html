@@ -2,13 +2,13 @@
 <html>
 <head>
   <meta charset="UTF-8" />
-  <title>AR Navigation Prototype</title>
+  <title>MindAR Navigation Prototype</title>
 
+  <!-- A-Frame -->
   <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
 
+  <!-- MindAR -->
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
-
-  <script src="app.js"></script>
 
   <style>
     body {
@@ -30,6 +30,7 @@
     }
   </style>
 </head>
+
 <body>
 
 <div id="status">
@@ -44,44 +45,115 @@
   device-orientation-permission-ui="enabled: false"
 >
 
+  <!-- Assets -->
   <a-assets>
-    <a-asset-item id="arrowModel" src="assets/arrow.glb"></a-asset-item>
+    <a-asset-item
+      id="arrowModel"
+      src="assets/arrow.glb">
+    </a-asset-item>
   </a-assets>
 
-  <!-- CAMERA -->
+  <!-- Camera -->
   <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
-  <!-- MARKER A -->
-  <a-entity id="markerA" mindar-image-target="targetIndex: 0">
-
-    <!-- ARROW -->
-    <a-gltf-model
-      id="arrow"
-      src="#arrowModel"
-      position="0 0 0"
-      rotation="0 0 0"
-      scale="0.3 0.3 0.3"
-      animation="property: position; dir: alternate; dur: 800; loop: true; to: 0 0.2 0"
-    >
-    </a-gltf-model>
-
+  <!-- Marker A -->
+  <a-entity
+    id="markerA"
+    mindar-image-target="targetIndex: 0">
   </a-entity>
 
-  <!-- MARKER B -->
-  <a-entity id="markerB" mindar-image-target="targetIndex: 1">
+  <!-- Marker B -->
+  <a-entity
+    id="markerB"
+    mindar-image-target="targetIndex: 1">
 
     <a-text
       value="DESTINATION REACHED"
       color="green"
       align="center"
       position="0 0.5 0"
-      scale="1 1 1"
-    >
+      scale="1 1 1">
     </a-text>
 
   </a-entity>
 
+  <!-- FLOATING ARROW -->
+  <a-gltf-model
+    id="arrow"
+    src="#arrowModel"
+    visible="false"
+    scale="0.3 0.3 0.3"
+    animation="
+      property: position;
+      dir: alternate;
+      dur: 800;
+      loop: true;
+      to: 0 0.2 0">
+  </a-gltf-model>
+
 </a-scene>
+
+<script>
+
+window.addEventListener("DOMContentLoaded", () => {
+
+  const markerA = document.querySelector("#markerA");
+  const markerB = document.querySelector("#markerB");
+
+  const arrow = document.querySelector("#arrow");
+
+  const status = document.querySelector("#status");
+
+  let placed = false;
+
+  // MARKER A FOUND
+  markerA.addEventListener("targetFound", () => {
+
+    if (placed) return;
+
+    console.log("Marker A Found");
+
+    status.innerHTML = "Follow the Arrow";
+
+    // Get world position
+    const worldPos = new THREE.Vector3();
+
+    markerA.object3D.getWorldPosition(worldPos);
+
+    // Place arrow in world space
+    arrow.object3D.position.copy(worldPos);
+
+    // Raise arrow slightly
+    arrow.object3D.position.y += 0.5;
+
+    // Move arrow forward
+    arrow.object3D.position.z -= 2;
+
+    // Rotate arrow forward
+    arrow.object3D.rotation.set(0, 0, 0);
+
+    // Show arrow
+    arrow.setAttribute("visible", true);
+
+    placed = true;
+
+  });
+
+  // MARKER B FOUND
+  markerB.addEventListener("targetFound", () => {
+
+    console.log("Marker B Found");
+
+    status.innerHTML = "Destination Reached";
+
+    // Hide arrow
+    arrow.setAttribute("visible", false);
+
+  });
+
+});
+
+</script>
 
 </body>
 </html>
