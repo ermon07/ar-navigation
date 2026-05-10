@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="UTF-8" />
-  <title>MindAR Navigation Prototype</title>
+  <title>MindAR Path Navigation</title>
 
   <!-- A-Frame -->
   <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
@@ -45,24 +45,16 @@
   device-orientation-permission-ui="enabled: false"
 >
 
-  <!-- Assets -->
-  <a-assets>
-    <a-asset-item
-      id="arrowModel"
-      src="assets/arrow.glb">
-    </a-asset-item>
-  </a-assets>
-
-  <!-- Camera -->
+  <!-- CAMERA -->
   <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
-  <!-- Marker A -->
+  <!-- MARKER A -->
   <a-entity
     id="markerA"
     mindar-image-target="targetIndex: 0">
   </a-entity>
 
-  <!-- Marker B -->
+  <!-- MARKER B -->
   <a-entity
     id="markerB"
     mindar-image-target="targetIndex: 1">
@@ -77,77 +69,81 @@
 
   </a-entity>
 
-  <!-- FLOATING ARROW -->
-  <a-gltf-model
-    id="arrow"
-    src="#arrowModel"
-    visible="false"
-    scale="0.3 0.3 0.3"
-    animation="
-      property: position;
-      dir: alternate;
-      dur: 800;
-      loop: true;
-      to: 0 0.2 0">
-  </a-gltf-model>
-
 </a-scene>
 
 <script>
 
 window.addEventListener("DOMContentLoaded", () => {
 
+  const scene = document.querySelector("a-scene");
+
   const markerA = document.querySelector("#markerA");
   const markerB = document.querySelector("#markerB");
 
-  const arrow = document.querySelector("#arrow");
-
   const status = document.querySelector("#status");
 
-  let placed = false;
+  let pathPlaced = false;
 
   // MARKER A FOUND
   markerA.addEventListener("targetFound", () => {
 
-    if (placed) return;
+    if (pathPlaced) return;
+
+    status.innerHTML = "Follow the Path";
 
     console.log("Marker A Found");
 
-    status.innerHTML = "Follow the Arrow";
+    // Get marker world position
+    const startPos = new THREE.Vector3();
 
-    // Get world position
-    const worldPos = new THREE.Vector3();
+    markerA.object3D.getWorldPosition(startPos);
 
-    markerA.object3D.getWorldPosition(worldPos);
+    // CREATE PATH DOTS
+    for (let i = 0; i < 10; i++) {
 
-    // Place arrow in world space
-    arrow.object3D.position.copy(worldPos);
+      const dot = document.createElement("a-sphere");
 
-    // Raise arrow slightly
-    arrow.object3D.position.y += 0.5;
+      // PATH POSITION
+      dot.setAttribute("position", {
+        x: startPos.x,
+        y: startPos.y + 0.1,
+        z: startPos.z - (i * 0.5)
+      });
 
-    // Move arrow forward
-    arrow.object3D.position.z -= 2;
+      // STYLE
+      dot.setAttribute("radius", 0.08);
+      dot.setAttribute("color", "#00ffff");
+      dot.setAttribute("opacity", 0.8);
 
-    // Rotate arrow forward
-    arrow.object3D.rotation.set(0, 0, 0);
+      // GLOWING EFFECT
+      dot.setAttribute("material", {
+        emissive: "#00ffff",
+        emissiveIntensity: 2
+      });
 
-    // Show arrow
-    arrow.setAttribute("visible", true);
+      // FLOAT ANIMATION
+      dot.setAttribute("animation", {
+        property: "position",
+        dir: "alternate",
+        dur: 800,
+        loop: true,
+        to: `${startPos.x} ${startPos.y + 0.2} ${startPos.z - (i * 0.5)}`
+      });
 
-    placed = true;
+      scene.appendChild(dot);
+
+    }
+
+    pathPlaced = true;
 
   });
 
   // MARKER B FOUND
   markerB.addEventListener("targetFound", () => {
 
-    console.log("Marker B Found");
-
     status.innerHTML = "Destination Reached";
 
-    // Hide arrow
-    arrow.setAttribute("visible", false);
+    console.log("Marker B Found");
 
   });
 
